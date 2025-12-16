@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[285]:
-
-
-# Loading necessary libraries and resources
+# -----------------------------
+# 1. Loading necessary libraries and resources
+# -----------------------------
 
 import pandas as pd
 import numpy as np
@@ -16,40 +12,24 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 
-
-# In[286]:
-
+# -----------------------------
+# 2. Reading in and cleaning data
+# -----------------------------
 
 # Reading in bee community data - describes bee presence for each site
 df = pd.read_csv("./Community_Data.csv")
 
-
-# In[287]:
-
-
 # Checking data looks ok
 df.head()
-
-
-# In[288]:
-
 
 # Counting total number of species present and adding it to the data frame (column = total_species)
 # We do this by isolating all the columns containing species counts (so all but the first), then we count the number of these columns which contain a number greater than 0
 species_cols = df.columns[1:]
 df["total_species"] = (df[species_cols] > 0).sum(axis=1)
 
-
-# In[289]:
-
-
 # Counting total number of bees present and adding it to the data frame (column = total_bees)
 # We do this by adding up all the bee counts across the species columns
 df["total_bees"] = df[species_cols].sum(axis=1)
-
-
-# In[290]:
-
 
 # Calculating simpson's diversity index for each site and adding it to the data frame (column = diverity)
 
@@ -59,34 +39,18 @@ proportions = df[species_cols].div(df["total_bees"], axis=0)
 # Simpson's Diversity Index (1 - sum((n/N)^2))
 df["diversity"] = 1 - (proportions ** 2).sum(axis=1)
 
-
-# In[291]:
-
-
 # Exploring this diversity data
 # Looking at statistical details (like min, max), and checking if there are any NA values
 print(df["diversity"].describe())
 print("\nNumber of NAs:", df["diversity"].isna().sum())
 
-
-# In[292]:
-
-
 # Histogram of diversity data
 df["diversity"].hist()
 # Very non-normal data, heavily left-skewed
 
-
-# In[293]:
-
-
 # Histogram of total number of species data
 df["total_species"].hist()
 # More normal looking, but a bit right skewed
-
-
-# In[294]:
-
 
 # Method 1: Classifying sites as 'high' or 'low' diversity
 # High diversity = simpsons diversity index higher than the median
@@ -101,16 +65,8 @@ df["diversity_class_simpsons"] = np.where(
     "low"
 )
 
-
-# In[295]:
-
-
 # Checking to see how many there are of each category (high diversity vs low diversity sites)
 df["diversity_class_simpsons"].value_counts()
-
-
-# In[296]:
-
 
 # Method 2: Classifying sites as 'high' or 'low' diversity
 # High diversity = number of species higher than the median
@@ -120,40 +76,20 @@ df["diversity_class_simpsons"].value_counts()
 species_median = df["total_species"].median()
 print(species_median)
 
-
-# In[297]:
-
-
 df["diversity_class_species"] = np.where(
     df["total_species"] > species_median,
     "high",
     "low"
 )
 
-
-# In[298]:
-
-
 # Checking to see how many there are of each category (high diversity vs low diversity sites)
 df["diversity_class_species"].value_counts()
-
-
-# In[299]:
-
 
 # Reading in site features data (things like latitude, longitude, water cover, forest cover, etc.)
 site_data = pd.read_csv("Site_Data.csv")
 
-
-# In[300]:
-
-
 # Check it looks ok
 site_data.head()
-
-
-# In[301]:
-
 
 # Creating a data table containing the bee community columns I want to keep
 bee_summary = df[
@@ -167,16 +103,8 @@ bee_summary = df[
     ]
 ]
 
-
-# In[302]:
-
-
 # Check it looks ok
 bee_summary.head()
-
-
-# In[303]:
-
 
 # Now merging the bee_summary data frame and the site_data data frame
 # This way, for each site, we have various measures of bee diversity and various site descriptors (e.g. water and forest cover)
@@ -188,25 +116,13 @@ bees = site_data.merge(
     how="left"
 )
 
-
-# In[304]:
-
-
 # Checking the merged table looks ok
 bees.head()
-
-
-# In[305]:
-
 
 # I will remove columns that we won't be using in the model
 # I will remove State and County as they are categorical variables which I don't wish to include in the model
 # i will remove Northing and Eassting as we already have longitude and latitude
 bees = bees.drop(columns=["State", "County", "Northing", "Easting"])
-
-
-# In[306]:
-
 
 # Looking at the correlations between all the variables
 
@@ -222,19 +138,11 @@ sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm", square=True)
 plt.title("Pairwise Correlation Between Numeric Variables")
 plt.show()
 
-
-# In[307]:
-
-
 # Multi-variable scatter matrix to further look at relationships between variables
 
 from pandas.plotting import scatter_matrix
 
 a = scatter_matrix(bees, figsize=(16, 16))
-
-
-# In[308]:
-
 
 # We have several measures of bee diversity
 # For the purposes of this model, I will use total number of bee species as the metric (rather than simpsons diversity index)
@@ -263,16 +171,8 @@ model_cols = [
 # Create new DataFrame for modeling
 model_data = bees[model_cols].copy()
 
-
-# In[309]:
-
-
 # Checking new data frame looks ok
 model_data.head()
-
-
-# In[311]:
-
 
 # Looking at colinearity again in this reduced dataframe
 
@@ -290,32 +190,16 @@ plt.show()
 
 # For now I will not be removing any variables based on possible colinearity, as I'd like to run a model including everything first
 
-
-# In[312]:
-
-
 # Converting the diversity class (high vs low) into a numeric variable
-# Convert 'high' → 1, 'low' → 0
+# Convert high to 1, low to 0
 model_data["diversity_class_species"] = model_data["diversity_class_species"].map({"low": 0, "high": 1})
-
-
-# In[313]:
-
 
 # Checking this looks ok
 model_data.head()
 
-
-# In[ ]:
-
-
 # -----------------------------
-# Logistic regression model
+# 3. Logistic regression model
 # -----------------------------
-
-
-# In[314]:
-
 
 # Preparing the data and training the logistic regression model
 
@@ -339,10 +223,6 @@ y_pred = model.predict(X_test)
 print("Prediction results of the first 5 test samples：", y_pred[:5])
 print("Top 5 real results：", y_test.values[:5])
 
-
-# In[315]:
-
-
 # Checking how well the model did
 
 # Calculate model accuracy
@@ -364,28 +244,17 @@ feature_importance = pd.DataFrame({
 print("importance of features：")
 print(feature_importance)
 
-
-# In[316]:
-
-
 # Summary of confusion matrix:
 # Top left: true negatives: 8
 # Top right: flase positives (site has low diversity, but model predicts high): 6
 # Bottom left: false negatives (site has high diversity, but model predicts low): 6
 # Bottom right: true positives: 10
 
-
-# In[317]:
-
-
 # Our model currently has an accuracy of 0.60 (not great)
 # I will try some tweaks to see if I can improve the model at all
 
-
-# In[321]:
-
-
 # We will try recursive feature elimination (removing features which do not improve the model's accuracy)
+# We import recursive feature removal from sklearn for this
 from sklearn.feature_selection import RFE
 
 # Rank all features by their importance
@@ -398,7 +267,7 @@ feature_names = ['Latitude', 'Longitude', '1000m_open', '1000m_developed', '1000
 
 # Rank features using RFE (1 = most important)
 model = LogisticRegression(max_iter=1000)
-rfe = RFE(estimator=model, n_features_to_select=1)  # rank all features
+rfe = RFE(estimator=model, n_features_to_select=1)
 rfe.fit(X_train, y_train)
 
 # Get feature rankings
@@ -410,10 +279,6 @@ feature_ranking = pd.DataFrame({
 print("Feature rankings (1 = most important):")
 print(feature_ranking)
 
-
-# In[323]:
-
-
 # Iteratively removing lowest-ranked features and storing model accuracy
 
 # Sort features from lowest importance (highest rank) to highest
@@ -423,8 +288,8 @@ results = []
 
 # Start with all features and iteratively remove one at a time
 for i in range(len(features_sorted_by_rank)):
-    selected_features = features_sorted_by_rank[i:]  # remove lowest i features
-    indices = [feature_names.index(f) for f in selected_features]  # get column indices
+    selected_features = features_sorted_by_rank[i:]  # Remove lowest i features
+    indices = [feature_names.index(f) for f in selected_features]  # Get column indices
     X_train_selected = X_train[:, indices]
     X_test_selected = X_test[:, indices]
 
@@ -448,44 +313,28 @@ print(results_df)
 
 # It appears that removing features will not improve the model's accuracy
 
-
-# In[324]:
-
-
 # -----------------------------
-# Random forest model
+# 4. Random forest model
 # -----------------------------
 
-
-# In[325]:
-
-
+# Importing the model from sklearn
 from sklearn.ensemble import RandomForestClassifier
 
-# Train Random Forest classifier
+# Train Random Forest model
 rf_model = RandomForestClassifier(n_estimators=500, random_state=42)
 rf_model.fit(X_train, y_train)
-
-
-# In[326]:
-
 
 # Predict on test set
 y_pred = rf_model.predict(X_test)
 print("Prediction results of the first 5 test samples:", y_pred[:5])
 print("Top 5 real results:", y_test.values[:5])
 
-
-# In[327]:
-
-
 # Evaluate model
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Random Forest test accuracy: {accuracy:.2f}")
 
-
-# In[328]:
-
+# Random Forest test accuracy: 0.60
+# So random forest model is not doing any better than the logistic regression model
 
 # Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
@@ -494,9 +343,11 @@ disp.plot(cmap='Blues')
 plt.title('Random Forest Confusion Matrix')
 plt.show()
 
-
-# In[338]:
-
+# Summary of confusion matrix:
+# Top left: true negatives: 6
+# Top right: flase positives (site has low diversity, but model predicts high): 8
+# Bottom left: false negatives (site has high diversity, but model predicts low): 4
+# Bottom right: true positives: 12
 
 # Feature importance
 feature_importance = pd.DataFrame({
@@ -506,23 +357,16 @@ feature_importance = pd.DataFrame({
 print("Random Forest feature importance:")
 print(feature_importance)
 
-
-# In[ ]:
-
-
 # -----------------------------
-# K means clustering model
+# 5. K means clustering model
 # -----------------------------
 
-
-# In[341]:
-
-
+# Importing model from sklearn
 from sklearn.cluster import KMeans
 
 # Determine number of clusters
 
-# We will try 2 using clusters (hopefully they'll be close to high vs low diversity)
+# We will try 2 using clusters (hopefully they'll align with high vs low diversity)
 k = 2
 kmeans = KMeans(n_clusters=k, random_state=42)
 kmeans.fit(X_scaled)
@@ -535,10 +379,6 @@ print("Cluster assignments for first 10 sites:", clusters[:10])
 clustered_data = model_data.copy()
 clustered_data['Cluster'] = clusters
 
-
-# In[343]:
-
-
 # Compare clusters to actual diversity class
 
 # Confusion matrix between clusters and actual classes
@@ -548,21 +388,25 @@ disp.plot(cmap='Blues')
 plt.title('K-Means Clusters vs Actual Diversity Class')
 plt.show()
 
+# Summary of confusion matrix:
+# (Here, when we lable a site '0' it means it is low diversity, while '1' is high diversity)
+# (The cluster model has randomly labelled sites as 0 or 1, so we are seeing if the cluster's labels overlap with our own)
+# Top left: both label and cluster = 0: 26
+# Top right: mismatch (we label 0, cluster labels 1): 25
+# Bottom left: mismatch (we label 1, cluster labels 0): 34
+# Bottom right: both label and cluster = 1: 14
 
-# In[346]:
-
-
+# Importing adjusted rand score from sklearn - this lets us check how similar the clustering is to our labels
 from sklearn.metrics import adjusted_rand_score
 
 # Adjusted Rand Index (measures similarity between clusters and true labels, 1 = perfect match)
 ari = adjusted_rand_score(clustered_data['diversity_class_species'], clustered_data['Cluster'])
 print(f"Adjusted Rand Index between clusters and true labels: {ari:.2f}")
 
+# Adjusted Rand Index between clusters and true labels: 0.03
+# So K means clustering has not produced a better model
 
-# In[347]:
-
-
-# Cluster centers
+# Cluster centers - finding out where how the model has clustered sites
 cluster_centers = pd.DataFrame(scaler.inverse_transform(kmeans.cluster_centers_), columns=X.columns)
 print("Cluster centers (original scale):")
 print(cluster_centers)
