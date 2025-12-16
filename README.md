@@ -8,7 +8,6 @@ This project explores how habitat characteristics influence bee species diversit
 Bee diversity is an important indicator of ecosystem health, and understanding how landscape features relate to diversity can help inform conservation and land management decisions.
 
 The analysis combines bee community data with site-level habitat information and applies both supervised and unsupervised machine learning approaches. The primary aim is to predict bee species richness at an agricultural site based on:
-
 - Site latitude and longitude  
 - Proportional cover of habitat types, including:
   - Open water  
