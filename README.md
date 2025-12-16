@@ -105,7 +105,22 @@ The following Python libraries are used:
 - numpy  
 - matplotlib  
 - seaborn  
-- scikit-learn  
+- scikit-learn
+
+## Installation Instructions.
+
+This project used uv, a lightweight Python package and environment manager.
+If uv is not already installed, installation instructions are available in the uv documentation.
+
+### Installing packages using uv
+
+To install all required packages, run:
+
+uv add pandas numpy matplotlib seaborn scikit-learn jupyterlab
+
+To add an individual package to the environment, use:
+
+uv add <package-name>
 
 ### Running the Analysis
 
