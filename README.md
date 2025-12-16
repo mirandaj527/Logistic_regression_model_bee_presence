@@ -86,9 +86,9 @@ Sites were classified as **high** or **low diversity** based on whether the numb
 
 The following machine learning models were applied:
 
-- Logistic regression (supervised classification)
+- Logistic regression
 - Random forest classifier
-- K-means clustering (unsupervised)
+- K-means clustering
 
 Habitat variables measured within 1000 m buffers were used for modelling to reduce collinearity with 200 m habitat measures.
 
