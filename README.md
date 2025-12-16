@@ -1,4 +1,4 @@
-### Predicting Bee Species Diversity from Agricultural Site Characteristics
+# Predicting Bee Species Diversity from Agricultural Site Characteristics
 
 ---
 
